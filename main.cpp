@@ -85,14 +85,18 @@ void detectFace(Mat& image, CascadeClassifier& cascade,double scale,bool tryflip
   cout<<((timer*1000/getTickFrequency()-1000/30 < 0)?"Success":"Failed")<<endl;
   cout<<"Detected "<<faces.size()<<"faces."<<endl;
   for ( size_t i = 0; i < faces.size(); i++ ){
-      Rect r = faces[i];
-      Mat smallImgROI;
+      Rect ROI = faces[i];
       vector<Rect> nestedObjects;
       Scalar color = colors[i%8];
-
+      //Mat temp=image
       //double aspect_ratio = (double)r.width/r.height;//长宽比
-      rectangle(image, cvPoint(cvRound(r.x*scale),cvRound(r.y*scale)), cvPoint(cvRound((r.x+r.width)*scale), cvRound((r.y+r.height)*scale)), color, 3, 8, 0 );
+      rectangle(image, cvPoint(cvRound(ROI.x*scale),cvRound(ROI.y*scale)), cvPoint(cvRound((ROI.x+ROI.width)*scale), cvRound((ROI.y+ROI.height)*scale)), color, 3, 8, 0 );
+
   }
   imshow( "result", image );
-  waitKey(0);
+  waitKey();
 }
+
+//void mosaic(){
+
+//}

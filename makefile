@@ -9,6 +9,7 @@ CFLAGS := `pkg-config opencv --cflags`
 LIBS := `pkg-config opencv --libs`
 
 PROG := main
+#PROG := facedetect_sample
 OBJS := $(PROG).o
 
 all:	$(PROG)

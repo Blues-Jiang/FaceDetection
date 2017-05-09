@@ -8,11 +8,11 @@
 using namespace std;
 using namespace cv;
 
-void detectFace(Mat&, CascadeClassifier&, double, bool);
+void detectFace(Mat&, CascadeClassifier&, vector<Rect>&, double, bool);
 
 string cascadeName="./data/haarcascades/haarcascade_frontalface_alt.xml";
 //string cascadeName="./data/lbpcascades/lbpcascade_frontalface.xml";
-int limitms = cvRound(1 / 15 * 1000);//15 FPS
+int limitms = cvRound(1000 / 15);//15 FPS
 
 
 int main(){
@@ -25,7 +25,7 @@ int main(){
   vector<Rect> faces;
   Mat frame;
   VideoCapture capture;
-  const double scale=1.2;
+  const double scale=1.5;
 
 
   //Load Haar Cascade
@@ -42,31 +42,49 @@ int main(){
     cout << "Video capturing has been started ..." << endl;
     //Set Camera
 
-    capture.set(CAP_PROP_FRAME_WIDTH, 320);
-    capture.set(CAP_PROP_FRAME_HEIGHT, 240);
+    capture.set(CAP_PROP_FRAME_WIDTH, 640);
+    capture.set(CAP_PROP_FRAME_HEIGHT, 480);
     capture.set(CAP_PROP_FPS, 15);
 
-    for(;;){
+    while(1){
         capture >> frame;
         if( frame.empty() ) break;
 
         Mat frameTemp = frame.clone();
-        detectFace(frameTemp,cascade,scale,0);
+        Mat mosaicTemp;
+
+        resize( frameTemp, mosaicTemp, Size(), 0.05, 0.05, INTER_AREA );
+        resize( mosaicTemp, mosaicTemp, Size(), 20, 20, INTER_NEAREST );
+        detectFace(frameTemp,cascade,faces,scale,0);
+
+        //for ( size_t i = 0; i < faces.size(); i++ ){
+        while(!faces.empty()){
+          Rect ROI(cvRound(faces.back().x*scale), cvRound(faces.back().y*scale), cvRound(faces.back().width*scale), cvRound(faces.back().height*scale) );
+          mosaicTemp(ROI).copyTo(frameTemp(ROI));
+          //rectangle(frameTemp, cvPoint(cvRound(faces.back().x*scale),cvRound(faces.back().y*scale)), cvPoint(cvRound((faces.back().x+faces.back().width)*scale), cvRound((faces.back().y+faces.back().height)*scale)), Scalar(255,0,0), 3, 8, 0 );
+          faces.pop_back();
+        }
+
         imshow( "Result", frameTemp );
-        char c = (char)waitKey(10);
+        //faces.clear();
+        char c = (char)waitKey(1);
         if( c == 27 || c == 'q' || c == 'Q' ) break;
     }
   }
 
-
-  //image = imread("./opencv_sample/Test-081.JPG",1);
-  //resize(image,image,Size(),0.4,0.4,CV_INTER_AREA);
-
+  /*
+  image = imread("./1.jpg",1);
+  //Mosaic
+  resize( image, image, Size(), 0.05, 0.05, INTER_AREA );
+  resize( image, image, Size(), 20, 20, INTER_NEAREST );
+  imshow("Mosaic", image);
+  waitKey();
+  */
 }
 
-void detectFace(Mat& image, CascadeClassifier& cascade,double scale,bool tryflip){
+void detectFace(Mat& image, CascadeClassifier& cascade,vector<Rect>& faces,double scale,bool tryflip){
   double timer = 0;
-  vector<Rect> faces, facesflip;
+  vector<Rect> facesflip;
 
   Mat gray, smallImage;
   //预处理
@@ -97,15 +115,14 @@ void detectFace(Mat& image, CascadeClassifier& cascade,double scale,bool tryflip
 
   timer = (double)getTickCount() - timer;
   cout<<"detection time = "<<timer*1000/getTickFrequency()<<" ms."<<endl;
-  cout<<((timer*1000/getTickFrequency()-1000/30 < 0)?"Success":"Failed")<<endl;
+  cout<<((timer*1000/getTickFrequency()-limitms < 0)?"Success":"Failed")<<endl;
   cout<<"Detected "<<faces.size()<<" faces."<<endl;
-  for ( size_t i = 0; i < faces.size(); i++ ){
+  /*for ( size_t i = 0; i < faces.size(); i++ ){
       Rect ROI = faces[i];
       //Mat temp=image
       //double aspect_ratio = (double)r.width/r.height;//长宽比
       rectangle(image, cvPoint(cvRound(ROI.x*scale),cvRound(ROI.y*scale)), cvPoint(cvRound((ROI.x+ROI.width)*scale), cvRound((ROI.y+ROI.height)*scale)), Scalar(255,0,0), 3, 8, 0 );
-  }
-
+  }*/
 }
 
 //void mosaic(){
